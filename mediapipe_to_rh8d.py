@@ -39,7 +39,7 @@ GAMMA_NONLINEAR_WRIST = 1.0
 DEFAULT_SPEED         = 300      # 0..1023 (ver README seed_robotics)
 SAFE_TIMEOUT_S        = 0.5      # si perdemos tracking este tiempo, publicar postura segura
 SAFE_POSE_FACTOR      = 0.1      # % de apertura para dedos en safe
-
+HUE_OFFSET           = 30
 # ===== Mapeo nombres de joints (desde tu YAML) =====
 # Según el YAML facilitado:
 # joint_mapping: {
@@ -343,7 +343,19 @@ def main():
                 continue
 
             frame = cv2.flip(frame, 1)  # espejo
-            rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            #rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            ## Glove config
+            hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+            h = hsv[:, :, 0]
+            s = hsv[:, :, 1]
+            v = hsv[:, :, 2]
+
+            # Desplaza el tono (cv2.add evita overflow)
+            h = cv2.add(h, HUE_OFFSET)
+            hsv_shifted = cv2.merge([h, s, v])
+            rgb = cv2.cvtColor(hsv_shifted, cv2.COLOR_HSV2RGB)
+
+            ##
             rgb.flags.writeable = False
             res = hands.process(rgb)
             rgb.flags.writeable = True
